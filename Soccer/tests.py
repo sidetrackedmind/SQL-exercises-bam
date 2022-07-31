@@ -61,7 +61,66 @@ def team_score_plot(team_name_short):
     plt.xlabel("Season")
     plt.ylabel("Goals per Game")
     plt.show()
-team_score_plot("ABE")
+#team_score_plot("ABE")
+
+####################### For a given player, find out what team(s) they played on, the player number (1-11), and whether the team was home or away.
+def player_teams_subquery(player_name, home_away, player_position):
+    return """
+        SELECT '{2}' AS 'Player Number', '{1}' AS 'Home or Away', Team.team_long_name AS 'Team Name'
+        FROM Player JOIN Match JOIN Team ON Player.player_api_id = Match.{1}_player_{2} AND Match.{1}_team_api_id = Team.team_api_id
+        WHERE Player.player_name = '{0}'
+    """.format(player_name, home_away, player_position)
+  
+def player_teams(player_name):
+    query = "\nUNION\n".join(
+        [player_teams_subquery(player_name,"home",i) for i in range(1,12)] +
+        [player_teams_subquery(player_name,"away",i) for i in range(1,12)]
+    ) +";"
+    print(pd.read_sql(query, conn))
+
+def all_player_teams():
+    players = pd.read_sql("SELECT * FROM Player;",conn)["player_name"].to_list()
+    for i in range(len(players)):
+        print(players[i])
+        player_teams(players[i])
+        print("\n")
+#all_player_teams()
+
+####################### Just the count of how many teams a player has been on. Eventually do this for all players.
+def player_teams_subquery_abb(player_name, home_away, player_position):
+    return """
+        SELECT Match.{1}_team_api_id AS 'TeamNumber'
+        FROM Player JOIN Match ON Player.player_api_id = Match.{1}_player_{2}
+        WHERE Player.player_name = '{0}'
+    """.format(player_name, home_away, player_position)
+  
+def player_teams_abb(player_name):
+    sub_query = "\nUNION\n".join(
+        [player_teams_subquery_abb(player_name,"home",i) for i in range(1,12)] +
+        [player_teams_subquery_abb(player_name,"away",i) for i in range(1,12)]
+    )
+    full_query = """
+        WITH Teams AS ({0})
+        SELECT COUNT(TeamNumber) FROM Teams
+    ;""".format(sub_query)
+    print(pd.read_sql(full_query, conn))
+#player_teams_abb("Aaron Hunt")
+
+def all_player_teams_abb():
+    players = pd.read_sql("SELECT * FROM Player;",conn)["player_name"].to_list()
+    for i in range(len(players)):
+        print(players[i])
+        player_teams_abb(players[i])
+        print("\n")
+all_player_teams_abb()
+
+# To-do
+# - Display the count as a simple number (i.e. no pandas table).
+# - Join it with all players
+# - Visualize the data
+
+#################################################################################
+# List of teams by 3 letter abbreviation
 
 #table = pd.read_sql("SELECT * FROM Team;", conn)
 #print(table["team_short_name"].to_list())
