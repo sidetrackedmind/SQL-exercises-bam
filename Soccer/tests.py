@@ -3,19 +3,13 @@
 
 import sqlite3
 import pandas as pd
+import numpy as np
 import matplotlib.pyplot as plt
 conn = sqlite3.connect("database.sqlite")
 cursor = conn.cursor()
 
-# What country is each leage in?
-#table = pd.read_sql("SELECT League.name, Country.name FROM League JOIN Country ON League.country_id = Country.id", conn)
-#print(table)
+####################### For a given team (takes the short name as a parameter), plot the average goals per game the team gets over time (by year).
 
-# Get the Home Player 1's.
-#table = pd.read_sql("SELECT Match.match_api_id, Player.player_name FROM Match JOIN Player ON Match.home_player_1 = Player.player_api_id", conn)
-#print(table)
-
-# For a given team (takes the short name as a parameter), plot the average goals per game the team gets over time (by year).
 def team_score(team_name):
     table = pd.read_sql("""
         WITH goals AS
@@ -64,6 +58,7 @@ def team_score_plot(team_name_short):
 #team_score_plot("ABE")
 
 ####################### For a given player, find out what team(s) they played on, the player number (1-11), and whether the team was home or away.
+
 def player_teams_subquery(player_name, home_away, player_position):
     return """
         SELECT '{2}' AS 'Player Number', '{1}' AS 'Home or Away', Team.team_long_name AS 'Team Name'
@@ -86,7 +81,8 @@ def all_player_teams():
         print("\n")
 #all_player_teams()
 
-####################### Just the count of how many teams a player has been on. Eventually do this for all players.
+####################### Just the count of how many teams a player has been on.
+
 def player_teams_subquery_abb(player_name, home_away, player_position):
     return """
         SELECT Match.{1}_team_api_id AS 'TeamNumber'
@@ -112,7 +108,8 @@ def all_player_teams_abb():
         print(players[i] + ": " + str(num_teams) + " team(s).")
 #all_player_teams_abb()
 
-####################### Same as above, but for all playesr at once
+####################### Same as above, but for all players at once. Produce a histogram of the number of teams that players are on.
+
 def player_teams_subquery_all(home_away, player_position):
     return """
         SELECT Player.player_name, Match.{0}_team_api_id AS 'TeamNumber'
@@ -126,22 +123,22 @@ def player_teams_all():
     )
     full_query = """
         WITH Teams AS ({0})
-        SELECT player_name, COUNT(TeamNumber) FROM Teams
+        SELECT player_name, COUNT(TeamNumber) AS num_teams FROM Teams
         GROUP BY player_name
     ;""".format(sub_query)
     return pd.read_sql(full_query, conn)
 
 def all_player_teams_all():
     table = player_teams_all()
-    print(table)
+    table = table.sort_values(by=['num_teams'], ignore_index=True)
+    max_number_teams = table["num_teams"][10847]
+    num_teams = table["num_teams"]
+    plt.title("Number of teams by players")
+    plt.hist(num_teams, width=0.75, bins=np.arange(1,max_number_teams+1)-0.375)
+    plt.ylabel("Number of Players")
+    plt.xlabel("Number of Teams")
+    plt.xticks(np.arange(1,max_number_teams+1))
+    plt.show()
+    
 all_player_teams_all()
 
-# To-do
-# - Visualize the number of teams players have been on.
-
-#################################################################################
-# List of teams by 3 letter abbreviation
-
-#table = pd.read_sql("SELECT * FROM Team;", conn)
-#print(table["team_short_name"].to_list())
-#['GEN', 'BAC', 'ZUL', 'LOK', 'CEB', 'AND', 'GEN', 'MON', 'DEN', 'STL', 'MEC', 'CLB', 'ROS', 'KOR', 'TUB', 'MOU', 'WES', 'CHA', 'STT', 'LIE', 'EUP', 'O-H', 'WAA', 'OOS', 'MOP', 'MUN', 'NEW', 'ARS', 'WBA', 'SUN', 'LIV', 'WHU', 'WIG', 'AVL', 'MCI', 'EVE', 'BLB', 'MID', 'TOT', 'BOL', 'STK', 'HUL', 'FUL', 'CHE', 'POR', 'BIR', 'WOL', 'BUR', 'BLA', 'SWA', 'QPR', 'NOR', 'SOU', 'REA', 'CRY', 'CAR', 'LEI', 'BOU', 'WAT', 'AUX', 'NAN', 'BOR', 'CAE', 'LEH', 'NIC', 'LEM', 'LOR', 'LYO', 'TOU', 'MON', 'PSG', 'NAN', 'LIL', 'REN', 'MAR', 'SOC', 'GRE', 'VAL', 'ETI', 'LEN', 'MON', 'BOU', 'ARL', 'BRE', 'AJA', 'ETG', 'DIJ', 'REI', 'BAS', 'TRO', 'GUI', 'MET', 'ANG', 'GAJ', 'BMU', 'HAM', 'LEV', 'DOR', 'S04', 'HAN', 'WOL', 'FCK', 'EFR', 'HBE', 'BIE', 'WBR', 'COT', 'HOF', 'GLA', 'STU', 'KAR', 'BOC', 'FRE', 'NUR', 'MAI', 'KAI', 'STP', 'AUG', 'FDU', 'GRF', 'BRA', 'PAD', 'ING', 'DAR', 'ATA', 'SIE', 'CAG', 'LAZ', 'CAT', 'GEN', 'CHI', 'REG', 'FIO', 'JUV', 'ACM', 'BOL', 'ROM', 'NAP', 'SAM', 'INT', 'TOR', 'LEC', 'UDI', 'PAL', 'BAR', 'LIV', 'PAR', 'CES', 'BRE', 'NOV', 'PES', 'VER', 'SAS', 'EMP', 'FRO', 'CAP', 'VIT', 'GRO', 'ROD', 'TWE', 'WII', 'AJA', 'NEC', 'GRA', 'UTR', 'PSV', 'HER', 'FEY', 'SPA', 'HAA', 'VOL', 'HEE', 'ALK', 'NAC', 'RKC', 'VEN', 'EXC', 'ZWO', 'CAM', 'GAE', 'DOR', 'WIS', 'POB', 'GOR', 'CHO', 'LEG', 'PWA', 'SLA', 'LGD', 'LOD', 'ODR', 'POZ', 'BEL', 'ARK', 'BIA', 'PIG', 'CKR', 'KKI', 'ZAG', 'WID', 'POD', 'POG', 'ZAW', 'LEC', 'TBN', 'POR', 'BEL', 'SCP', 'TRO', 'GUI', 'SET', 'FER', 'BRA', 'AMA', 'ACA', 'RA', 'BEN', 'LEI', 'NAC', 'NAV', 'MAR', 'ULE', 'OLH', 'POR', 'B-M', 'FEI', 'GV', 'MOR', 'EST', 'ARO', 'PEN', 'BOA', 'MAD', 'TON', 'FAL', 'RAN', 'HEA', 'MOT', 'KIL', 'HIB', 'ABE', 'INV', 'CEL', 'MIR', 'HAM', 'DUU', 'JOH', 'DUN', 'DUF', 'ROS', 'PAR', 'VAL', 'MAL', 'OSA', 'VIL', 'COR', 'REA', 'NUM', 'BAR', 'SAN', 'SEV', 'SPG', 'GET', 'BET', 'HUE', 'ESP', 'VAL', 'BIL', 'ALM', 'AMA', 'MAL', 'XER', 'ZAR', 'TEN', 'HER', 'LEV', 'SOC', 'GRA', 'RAY', 'CEL', 'ELC', 'EIB', 'COR', 'LAS', 'GRA', 'BEL', 'YB', 'BAS', 'AAR', 'SIO', 'LUZ', 'VAD', 'XAM', 'ZUR', 'GAL', 'THU', 'SER', 'LAU', 'LUG']
