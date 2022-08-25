@@ -52,6 +52,12 @@ def make_example_tables():
 
     #add an "old date" and the current date to weather table with no temp value
     #these dates are just to complete the bounds
+    cursor.execute("""
+        INSERT OR IGNORE INTO weather(day)
+        VALUES
+            ('2000-01-01'),
+            (date())
+    ;""")
 
     print("Weather Data")
     table = pd.read_sql("SELECT * FROM weather", conn)

@@ -1,0 +1,31 @@
+click
+python-dateutil
+datasette
+datasette-template-sql
+datasette-render-markdown>=2.1
+datasette-vega
+datasette-atom
+dogsheep-beta>=0.10.2
+datasette-graphql
+sqlite-utils>=3.9.1
+yaml-to-sqlite>=1.0
+markdown-to-sqlite>=1.0
+github-to-sqlite>=2.8.2
+python-graphql-client
+httpx
+feedparser
+pypi-to-sqlite
+pytest
+# These are used in deploy, listing them here so they
+# show up in the GitHub dependency graph:
+datasette-json-html
+datasette-template-sql
+python-dateutil
+datasette-vega
+datasette-atom
+datasette-graphql
+datasette-json-html
+datasette-debug-asgi
+html5lib
+beautifulsoup4
+jupyterlab
